@@ -5,7 +5,7 @@ import os
 
 
 def encode_text(text, codebook):
-    delimiters = [" ", ".", ":", "=", "\n", "\t"]
+    delimiters = [" ", ".", ":", "=", "\n", "\t","\n","\t"]
     encoded_text = ""
 
     delimiter_codebook = {deli: codebook.get(deli, '') for deli in delimiters}
@@ -13,7 +13,7 @@ def encode_text(text, codebook):
     delimiter_pattern = '|'.join(map(re.escape, delimiters))
 
     lines = text.splitlines()
-    new_line = "\n"
+    new_line = "\\n"
     for line in lines:
         if line in codebook:
             encoded_text += codebook[line]
@@ -82,3 +82,17 @@ if encoded_bytes:
 
     os.chmod(encoded_file, S_IREAD | S_IRGRP | S_IROTH)
 
+# textToBit.py
+
+# Mevcut kodlar...
+
+def main():
+    # Text to binary çevirme işlemlerini buraya taşıyın
+    with open('codebook.json', 'r') as f:
+        codebook = json.load(f)
+    with open("Mode01.ini", "r") as ini_file:
+        # Buraya mevcut işlemler...
+        pass
+
+if __name__ == "__main__":
+    main()

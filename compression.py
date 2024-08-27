@@ -1,8 +1,7 @@
 import gzip
-import bz2
-import lzma
 import os
 import time
+import json
 
 input_file = 'encoded_text.bin'
 
@@ -19,23 +18,24 @@ def gzip_compress(input_file, output_file):
         with gzip.open(output_file, 'wb') as f_out:
             f_out.writelines(f_in)
 
-def bzip2_compress(input_file, output_file):
-    with open(input_file, 'rb') as f_in:
-        with bz2.open(output_file, 'wb') as f_out:
-            f_out.writelines(f_in)
-
-def lzma_compress(input_file, output_file):
-    with open(input_file, 'rb') as f_in:
-        with lzma.open(output_file, 'wb') as f_out:
-            f_out.writelines(f_in)
-
 gzip_time, gzip_size = measure_compression_time(gzip_compress, 'encoded_text.bin.gz')
-bzip2_time, bzip2_size = measure_compression_time(bzip2_compress, 'encoded_text.bin.bz2')
-lzma_time, lzma_size = measure_compression_time(lzma_compress, 'encoded_text.bin.xz')
+
 
 original_size = os.path.getsize(input_file)
 print(f"Original Size: {original_size} bytes")
 
 print(f"Gzip Time: {gzip_time:.6f} seconds, Size: {gzip_size} bytes")
-print(f"Bzip2 Time: {bzip2_time:.6f} seconds, Size: {bzip2_size} bytes")
-print(f"LZMA Time: {lzma_time:.6f} seconds, Size: {lzma_size} bytes")
+
+
+# Mevcut kodlar...
+
+def main():
+    # Text to binary çevirme işlemlerini buraya taşıyın
+    with open('codebook.json', 'r') as f:
+        codebook = json.load(f)
+    with open("Mode01.ini", "r") as ini_file:
+        # Buraya mevcut işlemler...
+        pass
+
+if __name__ == "__main__":
+    main()

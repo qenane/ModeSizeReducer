@@ -30,3 +30,19 @@ with open('decoded_text.txt', 'w') as decoded_file:
 
 print("Decoded text:")
 print(decoded_text)
+
+
+# textToBit.py
+
+# Mevcut kodlar...
+
+def main():
+    # Text to binary çevirme işlemlerini buraya taşıyın
+    with open('codebook.json', 'r') as f:
+        codebook = json.load(f)
+    with open("Mode01.ini", "r") as ini_file:
+        # Buraya mevcut işlemler...
+        pass
+
+if __name__ == "__main__":
+    main()
