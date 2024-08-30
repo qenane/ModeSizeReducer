@@ -39,7 +39,7 @@ def main():
             if '\n' not in encoded_text:
                 encoded_text += delimiter_codebook.get('\n', '')
 
-        print("Encoded text:", encoded_text)
+        # print("Encoded text:", encoded_text)
         
 
         if encoded_text:  
@@ -50,7 +50,6 @@ def main():
         else:
             print("Error: Encoded text is empty.")
             return None
-
     with open('codebook.json', 'r') as f:
         codebook = json.load(f)
 
@@ -70,9 +69,8 @@ def main():
         else:
             text += '\n'
 
-    print("Text from file:")
-    print(text)
-
+    # print("Text from file:")
+    # print(text)
     encoded_bytes = encode_text(text, codebook)
     encoded_file = "encoded_text.bin"
     # if encoded_file !=True:
@@ -88,9 +86,12 @@ def main():
     #             bin_file.write(encoded_bytes)
     #         os.chmod(encoded_file, S_IREAD | S_IRGRP | S_IROTH)
 
+    print(encoded_file)
 
 if __name__ == "__main__":
     main()
 
 
 
+
+    print(encoded_text)

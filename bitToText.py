@@ -31,8 +31,6 @@ def main():
     with open("decoded_text.txt", "r") as file:
         decodedText = file.read()
     
-    print("Decoded text:")
-    print(decoded_text)
     return decodedText
 
 if __name__ == "__main__":

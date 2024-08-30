@@ -1,5 +1,193 @@
-import bitToText
+import os
+import re
 
+def edit_line(selected_line):
+    """Edits a line in the data structure.
+
+    Args:
+        selected_line (str): The line containing key-value pairs in the format.
+    """
+    
+    # Example line format: 'X5=ppi:0tmc:3Smin:0Smax:104Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0'
+    key_value_pairs = re.findall(r'(\w+)=([\w\.\-:]+)', selected_line)
+    
+    if not key_value_pairs:
+        print("Line does not contain key-value pairs in the expected format.")
+        return
+
+    # Create a dictionary to hold subkeys and their corresponding values
+    line_dict = {}
+    for key, value in key_value_pairs:
+        subkey_value_pairs = re.findall(r'(\w+):([\w\.\-]+)', value)
+        if subkey_value_pairs:
+            line_dict[key] = dict(subkey_value_pairs)
+        else:
+            line_dict[key] = value
+
+    # Display the line and allow user to edit it
+    print(f"Mevcut Line: {selected_line}")
+    for i, (key, sub_dict) in enumerate(line_dict.items()):
+        print(f"{i + 1}. {key}: {sub_dict}")
+    
+    # Allow user to select a key to edit
+    key_choice = int(input(f"Değiştirmek istediğiniz anahtarın numarasını seçin (1-{len(line_dict)}): ")) - 1
+    selected_key = list(line_dict.keys())[key_choice]
+    
+    if isinstance(line_dict[selected_key], dict):
+        # If the selected key has subkeys, allow user to select a subkey to edit
+        subkeys = list(line_dict[selected_key].keys())
+        for i, subkey in enumerate(subkeys):
+            print(f"{i + 1}. {subkey}: {line_dict[selected_key][subkey]}")
+        
+        subkey_choice = int(input(f"Değiştirmek istediğiniz subkey'in numarasını seçin (1-{len(subkeys)}): ")) - 1
+        selected_subkey = subkeys[subkey_choice]
+        new_value = input(f"{selected_subkey} için yeni değeri girin: ")
+        line_dict[selected_key][selected_subkey] = new_value
+    else:
+        # If no subkeys, edit the main value
+        new_value = input(f"{selected_key} için yeni değeri girin: ")
+        line_dict[selected_key] = new_value
+
+    # Reconstruct the line from the edited dictionary
+    new_line = ""
+    for key, sub_dict in line_dict.items():
+        if isinstance(sub_dict, dict):
+            subkey_str = "".join([f"{subkey}:{value}" for subkey, value in sub_dict.items()])
+            new_line += f"{key}={subkey_str}"
+        else:
+            new_line += f"{key}={sub_dict}"
+
+    print(f"Güncellenmiş Line: {new_line}")
+    return new_line
+
+
+def format_lines_for_saving(lines):
+    formatted_lines = []
+    for line in lines:
+        if "key" in line:
+            sub_values = " ".join(
+                [f"{subkey}:{subvalue}" for subkey, subvalue in line["numeric_values"].items()]
+            ) + " " + " ".join(
+                [f"{subkey}:{subvalue}" for subkey, subvalue in line["non_numeric_values"].items()]
+            )
+            formatted_line = f"{line['key']} = {sub_values.strip()}"
+        else:
+            formatted_line = line["line"]
+        formatted_lines.append(formatted_line)
+    return formatted_lines
+
+
+def display_menu(options, prompt="Seçiminiz: "):
+    """Displays a menu with numbered options and 'r' and 'q' choices.
+
+    Args:
+        options (list): A list of menu options.
+        prompt (str, optional): Prompt message for user input. Defaults to "Seçiminiz: ".
+
+    Returns:
+        str: The user's choice (option number, 'r', or 'q').
+    """
+
+    for i, option in enumerate(options, 1):
+        print(f"{i}- {option}")
+    print("r- Üst Menüye Dön")
+    print("q- Programdan Çık")
+
+    return input(prompt)
+
+
+def main_menu():
+    """Displays a menu for selecting a TXT file and returns data and filename.
+
+    Returns:
+        tuple: A tuple containing the parsed data (dict) and the filename (str),
+               or None, None if no file is selected.
+    """
+
+    txt_files = [f for f in os.listdir() if f.endswith(".txt")]
+    if not txt_files:
+        print("Bulunacak TXT dosyası yok.")
+        return None, None
+
+    print("Mevcut TXT dosyaları:")
+    for i, file in enumerate(txt_files, 1):
+        print(f"{i}- {file}")
+
+    while True:
+        file_choice = input("Bir dosya seçin (q ile çıkış yapın): ")
+        if file_choice.lower() == "q":
+            return None, None
+        try:
+            file_index = int(file_choice) - 1
+            if (
+                0 <= file_index < len(txt_files)
+            ):  # İndeks 0'dan başlar ve liste uzunluğundan 1 eksik olmalıdır
+                filename = txt_files[file_index]
+                break
+            else:
+                print(
+                    "Geçersiz seçim. Lütfen 1 ile",
+                    len(txt_files),
+                    "arasında bir sayı girin.",
+                )
+        except ValueError:
+            print("Geçersiz seçim. Lütfen bir sayı girin.")
+    with open(filename, "r") as file:
+        decoded_text = file.read()
+
+    data = parse_data(decoded_text)
+    return data, filename
+
+def parse_line(line, current_header):
+    # Karmaşık formatı kontrol et (X0=ppi:0tmc:3Smin:0Smax:109...)
+    complex_match = re.match(r'^(\w+)=([\w\.\-:]+)$', line)
+    if complex_match:
+        key, value_string = complex_match.groups()
+        numeric_values = {}
+        non_numeric_values = {}
+
+        # ':', ':', ve ':''den sonraki numerik olmayan kısımları ayır
+        segments = re.split(r'(?<=\d)(?=\D)|(?<=\D)(?=\d)', value_string)
+
+        # Segmentleri işleyerek anahtar-değer çiftlerini ayrıştır
+        for i in range(0, len(segments) - 1, 2):
+            subkey = segments[i]
+            subvalue = segments[i+1]
+            if re.match(r'^-?\d+(\.\d+)?$', subvalue):  # Numerik mi değil mi kontrol et
+                numeric_values[subkey] = subvalue
+            else:
+                non_numeric_values[subkey] = subvalue
+
+        return {
+            'key': key,
+            'numeric_values': numeric_values,
+            'non_numeric_values': non_numeric_values,
+            'header': current_header,
+            'line': line
+        }
+
+    # Basit formatı kontrol et (ASS0=351, SECTOR=0, Lang=-1...)
+    simple_match = re.match(r'^(\w+)=(.+)$', line)
+    if simple_match:
+        key, value = simple_match.groups()
+        return {
+            'key': key,
+            'numeric_values': {key: value} if re.match(r'^-?\d+(\.\d+)?$', value) else {},
+            'non_numeric_values': {} if re.match(r'^-?\d+(\.\d+)?$', value) else {key: value},
+            'header': current_header,
+            'line': line
+        }
+
+    # Hiçbir formata uymayan satırlar
+    return {
+        'key': None,
+        'numeric_values': {},
+        'non_numeric_values': {},
+        'header': current_header,
+        'line': line
+    }
+
+    
 def parse_data(decoded_text):
     data = {'headers': [], 'lines': []}
     current_header = None
@@ -9,87 +197,90 @@ def parse_data(decoded_text):
             current_header = line.strip()
             data['headers'].append(current_header)
         else:
-            try:
-                key, value = line.split('=', 1)
-                data['lines'].append({'header': current_header, 'key': key, 'value': value.strip()})
-            except ValueError:
-                data['lines'].append({'header': current_header, 'line': line})
+            result = parse_line(line, current_header)
+            data['lines'].append(result)
 
     return data
 
-def display_menu(title, options):
-    print(f"\n{title}")
-    for i, option in enumerate(options, start=1):  # Menü seçenekleri 1'den başlatılıyor
-        print(f"{i} - {option}")
-    print("q - Programdan çık")
 
-def select_option(prompt, options):
+def main():
+    data, filename = main_menu()
+
+    if not data:
+        return
+
     while True:
-        choice = input(f"\n{prompt}: ").strip()
-        if choice == 'q':
-            return 'quit'
-        elif choice == 'r':
-            return 'back'
-        try:
-            index = int(choice)
-            if 0 <= index <= len(options):  # Tüm dosyayı göster seçeneğini de dahil etmek için <= kullanılıyor
-                return index - 1  # Kullanıcının 1'den başlayan seçimini 0 tabanlı indekse dönüştürüyoruz
+        print("\nMenü:")
+        print("1- Edit")
+        print("2- Read")
+        choice = input("Seçiminiz: ")
+
+        if choice == "1" or choice == "2":
+            print("\nHeader'lar:")
+            header_choice = display_menu(data["headers"], "Header seçiniz: ")
+
+            if header_choice == "q":
+                break
+            elif header_choice == "r":
+                continue
             else:
-                print("Geçersiz seçim, tekrar deneyin.")
-        except ValueError:
-            print("Lütfen bir sayı girin veya 'r' ya da 'q' seçeneklerini kullanın.")
+                try:
+                    header_index = int(header_choice) - 1
+                    selected_header = data["headers"][header_index]
 
-def handle_read_mode(data):
-    while True:
-        display_menu("Header'lar", data['headers'])
-        header_choice = select_option("Header seçiniz", data['headers'])
+                    matching_lines = [
+                        line for line in data["lines"] if line["header"] == selected_header
+                    ]
+                    if not matching_lines:
+                        print("Bu header altında satır bulunmamaktadır.")
+                        continue
 
-        if header_choice == -1:  # Tüm dosyayı göster seçeneği
-            print("\nTüm dosya:")
-            for line in data['lines']:
-                if 'key' in line:
-                    print(f"{line['key']} = {line['value']}")
-                else:
-                    print(line['line'])
-            input("\nDevam etmek için herhangi bir tuşa basın...")  # Kullanıcıya devam etme seçeneği
-            continue
+                    print(f"\n{selected_header} altındaki satırlar:")
+                    line_choice = display_menu(
+                        [line["line"] for line in matching_lines],
+                        "Satır seçiniz: ",
+                    )
 
-        if header_choice in ['quit', 'back']:
-            return header_choice
+                    if line_choice == "q":
+                        break
+                    elif line_choice == "r":
+                        continue
+                    else:
+                        try:
+                            line_index = int(line_choice) - 1
+                            selected_line = matching_lines[line_index]["line"]
 
-        selected_header = data['headers'][header_choice]
-        lines = [line for line in data['lines'] if line['header'] == selected_header]
-        line_options = [f"{line['key']} = {line['value']}" if 'key' in line else line['line'] for line in lines]
+                            if choice == "1":  # Edit işlemi
+                                new_line = edit_line(selected_line)
+                                if new_line:
+                                    data["lines"][
+                                        line_index
+                                    ] = new_line  # Değiştirilen satırı güncelle
 
-        while True:
-            display_menu(f"{selected_header} header'ının line'ları", line_options)
-            line_choice = select_option("Line seçiniz", line_options)
+                            elif choice == "2":  # Read işlemi
+                                print(f"Seçilen satır: {selected_line}")
+                            else:
+                                print("Geçersiz seçim.")
 
-            if line_choice in ['quit', 'back']:
-                break
+                        except ValueError:
+                            print("Geçersiz seçim. Lütfen bir sayı girin.")
 
-            selected_line = lines[line_choice]
-            print(f"\nSeçilen line: {selected_line['key']}")
+                except ValueError:
+                    print("Geçersiz seçim. Lütfen bir sayı girin.")
 
-def main(decoded_text):
-    data = parse_data(decoded_text)
-
-    while True:
-        display_menu("Ana Menü", ["Edit", "Read"])
-        choice = select_option("Seçiminiz", ["Edit", "Read"])
-
-        if choice == 'quit':
-            print("Programdan çıkılıyor...")
+        elif choice == "q":
             break
-        elif choice == 'back':
-            continue
-        elif choice == 0:
-            print("Edit seçeneği henüz desteklenmiyor.")
-        elif choice == 1:
-            read_mode_result = handle_read_mode(data)
-            if read_mode_result == 'quit':
-                break
+        else:
+            print("Geçersiz seçim. Lütfen tekrar deneyin.")
+
+    save_choice = input("Değişiklikleri kaydetmek istiyor musunuz? (E/H): ").lower()
+
+    if save_choice == "e":
+        formatted_lines = format_lines_for_saving(data["lines"])
+        with open(filename, "w") as file:
+            file.write("\n".join(formatted_lines))
+        print("Değişiklikler kaydedildi.")
+
 
 if __name__ == "__main__":
-    decoded_text = bitToText.main()  # bitToText'den decodedText'i alıyoruz
-    main(decoded_text)  # decodedText'i ana fonksiyona gönderiyoruz
+    main()

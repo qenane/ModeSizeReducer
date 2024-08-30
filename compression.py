@@ -3,6 +3,7 @@ import os
 import time
 
 
+
 def main():
     input_file = 'encoded_text.bin'
     output_file = f"{input_file}.gz"  # Create output filename with .gz extension
@@ -23,11 +24,12 @@ def main():
     gzip_time, gzip_size = measure_compression_time(gzip_compress, output_file)
 
     original_size = os.path.getsize(input_file)
-    print(f"Original Size: {original_size} bytes")
+    # print(f"Original Size: {original_size} bytes")
 
-    print(f"Gzip Time: {gzip_time:.6f} seconds, Size: {gzip_size} bytes")
-
-
+    # print(f"Gzip Time: {gzip_time:.6f} seconds, Size: {gzip_size} bytes")
+    password ="q"
+    file_to_password = "encoded_text.bin.gz"
+    
 
     # os.remove(input_file)
     # print(f"Original file '{input_file}' deleted.")
