@@ -1,133 +1,15 @@
 #Client Connection default settings
-Lang=-1
-Host=1210.0.21.150
-Port=0000000000000
-SeconHost=127.0.0.1
-
 #PPI Options
-Beam=1
-Map=1
-Icons=1
-IconSize=16
-MTSize=9
-Trace=1
-SelInfo=0
-NearInfo=0
-FastInfo=0
-StrongInfo=0
-SelMark=1
-NearMark=0
-FastMark=0
-StrongMark=0
-TypeF11=1
-MapType=0
-MaxSel=10
-MaxZoom=20
-
 #Optical Device default settings
-HostOD=127.0.0.1
-PortOD=48333
-OD_Aofs=7.8
-OD_Dofs=30
-ODCElv=10
-
 #XCC default settings
-HostXCC=127.0.0.1
-PortXCC=48334
-
 #DIS default settings
-HostDIS=127.0.0.1
-PortDIS=48336
-
 #SDP: local options
-MTSZ=6
-FileSize=1000
-
 #SDP: azimuth enhancement and tracking
-MTkTWS=2.0
-MTkEXP=4.0
-SP_aA=5.0
-SP_aR=40.0
-SP_aV=3.1
-SP_aF=6
-SP_tA=3.0
-SP_tR=36
-SP_tV=3.1
-
 #SDP: MT filter
-SP_Son=1
-SP_Smin=0.00005
-SP_Smax=20
-SP_Ron=0
-SP_Rmin=1100
-SP_Rmax=50000
-SP_Aon=0
-SP_Amin=0
-SP_Amax=361
-SP_Von=0
-SP_Vmin=-250
-SP_Vmax=250
-SP_Hon=0
-SP_HFlt=50000.0
-
 #FDP: Position/Orientation/BlindSec
-Latitude=0.8947586417
-Longitude=0.5393799543
-Height=0.0
-North=0.0
-BEG1=10.00
-END1=50.00
-BEG2=20.00
-END2=60.00
-BEG3=30.00
-END3=70.00
-BLS1=0
-BLS2=0
-BLS3=0
-PPI1=0
-PPI2=0
-PPI3=0
-
 #FDP: Data Processing
-ASRF=1.5
-THRQ=15.0
-MCSL=2.0
-ACSL=5.0
-RINT=72.0
-VINT=5.2
-RCFAR=661.9
-VCFAR=6.0
-IFTQ=10.0
-STTQ=15.0
-MDIQ=10.0
-
 #FDP: Antenna: ScanType/Sector
-ASS0=351
-ASS1=20
-SECTOR=0
-
 #FDP: Mode / E-scan
-PMNUM=2
-ESCAN=1
-EBEG=0
-ENUM=21
-EFIX=3
-
 #SDP: Alarm zones configuration
-X0=ppi:0tmc:3Smin:0Smax:109Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X1=ppi:0tmc:3Smin:0Smax:100Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X2=ppi:0tmc:3Smin:0Smax:101Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X3=ppi:0tmc:3Smin:0Smax:102Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X4=ppi:0tmc:3Smin:0Smax:103Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X5=ppi:0tmc:3Smin:0Smax:104Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X6=ppi:0tmc:3Smin:0Smax:105Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X7=ppi:0tmc:3Smin:0Smax:106Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X8=ppi:0tmc:3Smin:0Smax:107Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-X9=ppi:0tmc:3Smin:0Smax:108Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0
-
 #RST: RST configuration
-Theme=2
-DirMap=
-TisHeightThresh=10
-TisClass=0
-TisTout=1000
+LangHostPortBeam1Map1Icons1IconSizeMTSize9Trace1SelInfo0NearInfo0FastInfo0StrongInfo0SelMark1NearMarkFastMarkStrongMark0TypeF111MapType0MaxSelMaxZoom HostODPortODOD_AofsOD_DofsODCElv HostXCCPortXCC HostDISPortDIS MTSZ6FileSize MTkTWSMTkEXPSP_aASP_aRSP_aVSP_aF6SP_tASP_tRSP_tVSP_Son1SP_SminSP_SmaxSP_Ron0SP_RminSP_RmaxSP_Aon0SP_Amin0SP_AmaxSP_Von0SP_VminSP_VmaxSP_Hon0SP_HFlt LatitudeLongitudeHeightNorthBEG1END1BEG2END2BEG3END3BLS10BLS20BLS30PPI10PPI20PPI30 ASRFTHRQMCSLACSLRINTVINTRCFARVCFARIFTQSTTQMDIQ ASS0ASS1SECTOR0 PMNUM2ESCAN1EBEG0ENUMEFIX3 X00300X10300X20300X30300X40300X50300X60300X70300X80300X90300 Theme2DirMap=TisHeightThreshTisClass0TisTout

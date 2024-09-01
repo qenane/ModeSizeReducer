@@ -1,55 +1,92 @@
 import json
 import re
-from stat import S_IXUSR, S_IRGRP, S_IROTH, S_IREAD, S_IWRITE
-import os
+
+def is_numeric(value):
+    """Check if a string represents a numeric value."""
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+def parse_segment(segment):
+    """Split segment into numeric and non-numeric parts."""
+    result = []
+    # Match numeric values (including negative and decimal) and non-numeric parts
+    matches = re.findall(r'(-?\d*\.?\d+|\D+)', segment)
+    for match in matches:
+        if match.strip() and not match.strip().isdigit() and not re.match(r'-?\d*\.?\d+', match):
+            result.extend(re.findall(r'\D+', match))
+        else:
+            result.append(match)
+    return result
+
+def encode_text(text, codebook):
+    delimiters = [" ", ".", ":", "=", "\n", "\t"]
+    encoded_text = ""
+
+    delimiter_codebook = {deli: codebook.get(deli, '') for deli in delimiters}
+    delimiter_pattern = '|'.join(map(re.escape, delimiters))
+
+    lines = text.splitlines()
+    new_line = "\n"
+    for line in lines:
+        if line in codebook:
+            encoded_text += codebook[line]
+            encoded_text += codebook[new_line]
+            continue
+
+        words_and_delimiters = re.split(f'({delimiter_pattern})', line)
+        print("Original segments:", words_and_delimiters)
+        
+        for segment in words_and_delimiters:
+            segment = segment.strip()
+            if segment:
+                if segment in codebook:
+                    # Directly encode segment if it's in codebook
+                    encoded_text += codebook[segment]
+                else:
+                    # Split into numeric and non-numeric parts
+                    parts = parse_segment(segment)
+                    print("Parsed parts:", parts)
+                    for part in parts:
+                        if part in codebook:
+                            encoded_text += codebook[part]
+                        elif is_numeric(part):
+                            for char in part:
+                                if char in codebook:
+                                    encoded_text += codebook[char]
+                                else:
+                                    print(f"Character '{char}' not found in codebook.")
+                        else:
+                            print(f"Non-numeric segment '{part}' not found in codebook.")
+                            for char in part:
+                                if char in codebook:
+                                    encoded_text += codebook[char]
+                                else:
+                                    print(f"Character '{char}' not found in codebook.")
+            else:
+                encoded_text += delimiter_codebook.get(segment, '')
+
+        if '\n' not in encoded_text:
+            encoded_text += delimiter_codebook.get('\n', '')
+
+    print("Encoded text:", encoded_text)
+
+    if encoded_text:
+        # Ensure the length of encoded_text is a multiple of 8
+        length = len(encoded_text)
+        padded_length = (length + 7) // 8 * 8
+        encoded_text = encoded_text.ljust(padded_length, '0')
+
+        encoded_bytes = int(encoded_text, 2).to_bytes(padded_length // 8, byteorder='big')
+        return encoded_bytes
+    else:
+        print("Error: Encoded text is empty.")
+        return None
 
 
 def main():
-    def encode_text(text, codebook):
-        delimiters = [" ", ".", ":", "=", "\n", "\t","\n","\t"]
-        encoded_text = ""
-
-        delimiter_codebook = {deli: codebook.get(deli, '') for deli in delimiters}
-
-        delimiter_pattern = '|'.join(map(re.escape, delimiters))
-
-        lines = text.splitlines()
-        new_line = "\n"
-        for line in lines:
-            if line in codebook:
-                encoded_text += codebook[line]
-                encoded_text += codebook[new_line]
-                continue
-
-            words_and_delimiters = re.split(f'({delimiter_pattern})', line)
-
-            for segment in words_and_delimiters:
-                if segment in codebook:
-                    encoded_text += codebook[segment]
-                else:
-                    if segment.strip():
-                        for char in segment:
-                            if char in codebook:
-                                encoded_text += codebook[char]
-                            else:
-                                print(f"Character '{char}' not found in codebook.")
-                    else:
-                        encoded_text += delimiter_codebook.get(segment, '')
-
-            if '\n' not in encoded_text:
-                encoded_text += delimiter_codebook.get('\n', '')
-
-        # print("Encoded text:", encoded_text)
-        
-
-        if encoded_text:  
-            encoded_bytes = int(encoded_text, 2).to_bytes((len(encoded_text) + 7) // 8, byteorder='big')
-
-
-            return encoded_bytes
-        else:
-            print("Error: Encoded text is empty.")
-            return None
     with open('codebook.json', 'r') as f:
         codebook = json.load(f)
 
@@ -69,29 +106,16 @@ def main():
         else:
             text += '\n'
 
-    # print("Text from file:")
-    # print(text)
+    print("Text from file:")
+    print(text)
+    
     encoded_bytes = encode_text(text, codebook)
-    encoded_file = "encoded_text.bin"
-    # if encoded_file !=True:
-    #     if encoded_bytes:
-    #         with open("encoded_text.bin", "wb") as bin_file:
-    #             bin_file.write(encoded_bytes)
+    encoded_file = "output.bin"
+    if encoded_bytes:
+        with open(encoded_file, "wb") as bin_file:
+            bin_file.write(encoded_bytes)
             
-    # os.chmod(encoded_file, S_IXUSR | S_IWRITE | S_IREAD | S_IRGRP | S_IROTH )
-
-    # if encoded_bytes:
-    #     if encode_text:
-    #         with open('encoded_text.bin', 'wb') as bin_file:
-    #             bin_file.write(encoded_bytes)
-    #         os.chmod(encoded_file, S_IREAD | S_IRGRP | S_IROTH)
-
     print(encoded_file)
 
 if __name__ == "__main__":
     main()
-
-
-
-
-    print(encoded_text)
