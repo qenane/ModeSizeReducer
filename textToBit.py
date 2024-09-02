@@ -27,7 +27,8 @@ def encode_text(text, codebook):
 
     delimiter_codebook = {deli: codebook.get(deli, '') for deli in delimiters}
     delimiter_pattern = '|'.join(map(re.escape, delimiters))
-
+    
+    # Split text into lines
     lines = text.splitlines()
     new_line = "\n"
     for line in lines:
@@ -36,19 +37,20 @@ def encode_text(text, codebook):
             encoded_text += codebook[new_line]
             continue
 
+        # Split line into segments based on delimiters
         words_and_delimiters = re.split(f'({delimiter_pattern})', line)
-        print("Original segments:", words_and_delimiters)
-        
+        # print("Original segments:", words_and_delimiters)      
+        # Process each segment
         for segment in words_and_delimiters:
             segment = segment.strip()
             if segment:
                 if segment in codebook:
-                    # Directly encode segment if it's in codebook
                     encoded_text += codebook[segment]
                 else:
                     # Split into numeric and non-numeric parts
+                    # print(f"Line being parsed: {line}")
                     parts = parse_segment(segment)
-                    print("Parsed parts:", parts)
+                    # print("Parsed parts:", parts)
                     for part in parts:
                         if part in codebook:
                             encoded_text += codebook[part]
@@ -57,7 +59,7 @@ def encode_text(text, codebook):
                                 if char in codebook:
                                     encoded_text += codebook[char]
                                 else:
-                                    print(f"Character '{char}' not found in codebook.")
+                                    print(f"Numeric character '{char}' not found in codebook.")
                         else:
                             print(f"Non-numeric segment '{part}' not found in codebook.")
                             for char in part:
@@ -71,8 +73,6 @@ def encode_text(text, codebook):
         if '\n' not in encoded_text:
             encoded_text += delimiter_codebook.get('\n', '')
 
-    print("Encoded text:", encoded_text)
-
     if encoded_text:
         # Ensure the length of encoded_text is a multiple of 8
         length = len(encoded_text)
@@ -80,13 +80,18 @@ def encode_text(text, codebook):
         encoded_text = encoded_text.ljust(padded_length, '0')
 
         encoded_bytes = int(encoded_text, 2).to_bytes(padded_length // 8, byteorder='big')
+        # print(encoded_text)
         return encoded_bytes
     else:
         print("Error: Encoded text is empty.")
         return None
 
-
 def main():
+    def test_parse_segment():
+        test_segment = "ppi:0tmc:3Smin:0Smax:102Rmin:0Rmax:50000Amin:0.0Amax:359.0Hmin:0.0Hmax:1000.0Vmin:-250.0Vmax:250.0Cmin:0.0Cmax:361.0"
+        result = parse_segment(test_segment)
+        # print("Parsed Segment:", result)
+
     with open('codebook.json', 'r') as f:
         codebook = json.load(f)
 
@@ -106,8 +111,8 @@ def main():
         else:
             text += '\n'
 
-    print("Text from file:")
-    print(text)
+    # print("Text from file:")
+    # print(text)
     
     encoded_bytes = encode_text(text, codebook)
     encoded_file = "output.bin"
@@ -115,7 +120,11 @@ def main():
         with open(encoded_file, "wb") as bin_file:
             bin_file.write(encoded_bytes)
             
-    print(encoded_file)
+    print(f"Encoded file saved as: {encoded_file}")
+
+    test_parse_segment()
 
 if __name__ == "__main__":
     main()
+else:
+    export_encode_text= encode_text

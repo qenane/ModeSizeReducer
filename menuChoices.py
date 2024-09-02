@@ -4,6 +4,7 @@ import gz_utils
 import textToBit
 import bitToText
 import json
+import datetime
 
 
 def edit_line(selected_line):
@@ -16,7 +17,9 @@ def edit_line(selected_line):
         
         key, value_string = complex_match.groups()
         subkey_value_pairs = re.findall(r'([a-zA-Z]+):(-?\d*\.?\d+)', value_string)
-        
+        # print(f"Value String: {value_string}")
+        # print(f"Subkey-Value Pairs: {subkey_value_pairs}")
+
         if not subkey_value_pairs:
             print("Kompleks satırda anahtar-değer çiftleri bulunamadı.")
             return selected_line
@@ -70,13 +73,21 @@ def format_lines_for_saving(data):
         if line["header"] != current_header:
             current_header = line["header"]
             formatted_lines.append(current_header)
-        
-        if "key" in line and line["key"]:
-            all_values = {**line["numeric_values"], **line["non_numeric_values"]}
-            sub_values = "".join([f"{subkey}={subvalue}" for subkey, subvalue in all_values.items()])
-            formatted_line = sub_values
+        # print(line)
+        if ":" in line['line']:
+            if "key" in line and line["key"]:
+                all_values = {**line["numeric_values"], **line["non_numeric_values"]}
+                sub_values = "".join([f"{subkey}:{subvalue}" for subkey, subvalue in all_values.items()])
+                formatted_line = f"{line['key']}={sub_values.strip()}"
+            else:
+                formatted_line = line["line"]
         else:
-            formatted_line = line["line"]
+            if "key" in line and line["key"]:
+                all_values = {**line["numeric_values"], **line["non_numeric_values"]}
+                sub_values = "".join([f"{subvalue}" for subkey, subvalue in all_values.items()])
+                formatted_line = f"{line['key']}={sub_values.strip()}"
+            else:
+                formatted_line = line["line"]
 
         formatted_lines.append(formatted_line)
     
@@ -104,13 +115,26 @@ def file_menu(file_extension):
 
         if file_choice.lower() == "q":
             save_choice = input("Değişiklikleri kaydetmek istiyor musunuz? (E/H): ").lower()
+            
             if save_choice == "e":
                 with open('codebook.json', 'r') as f:
                     codebook = json.load(f)
-                    formatted_lines = format_lines_for_saving(data['lines'])
-                    print(formatted_lines)
-                textToBit.encode_text(formatted_lines, codebook)
-
+                    formatted_lines = "\n".join(format_lines_for_saving(data['lines']))
+                    
+                    # print(formatted_lines)
+                    # textToBit.encode_text(formatted_lines, codebook)
+                    encoded_bytes= textToBit.export_encode_text(formatted_lines,codebook)
+                    
+                    if encoded_bytes:
+                        filename = f'{filename}.bin'
+                        compressed_filename = f'{filename}.gz'
+                        print("1",compressed_filename)
+                        
+                        with open(filename, "wb") as bin_file:
+                            bin_file.write(encoded_bytes)
+                        gz_utils.compress_file(filename, compressed_filename)
+                        os.remove(filename)
+                        return
             return None, None
         elif file_choice.lower() == "r":
             return "back", None
@@ -134,6 +158,7 @@ def file_menu(file_extension):
         with open(new_filename, "rb") as bin_file:
             encoded_data = bin_file.read()
         decoded_text = bitToText.decode_text(encoded_data, codebook)
+        os.remove(new_filename)
             
     elif file_extension == ".ini":
         with open(filename, "r") as file:
@@ -157,8 +182,11 @@ def main_menu():
 
         if choice == '1':
             data, filename = file_menu('.ini')
+            filename=filename[:-4]
         elif choice == '2':
             data, filename = file_menu('.gz')
+            filename=filename[:-3]
+            
         elif choice == 'q':
             print("Programdan çıkılıyor...")
             return None, None
@@ -239,9 +267,23 @@ def main():
                             with open('codebook.json', 'r') as f:
                                 codebook = json.load(f)
                             formatted_lines = "\n".join(format_lines_for_saving(data['lines']))
-                            print(formatted_lines)
-                            textToBit.encode_text(formatted_lines, codebook)
+                            
+                            # print(formatted_lines)
+                            # textToBit.encode_text(formatted_lines, codebook)
+                            encoded_bytes= textToBit.export_encode_text(formatted_lines,codebook)
+                            
+                            if encoded_bytes:
+                                filename = f'{filename}.bin'
+                                compressed_filename = f'{filename}.gz'
+                                print("2",compressed_filename)
+                                
+                                with open(filename, "wb") as bin_file:
+                                    bin_file.write(encoded_bytes)
+                                gz_utils.compress_file(filename, compressed_filename)
+                                os.remove(filename)
+                                return
                         return
+                                
                     elif header_choice.lower() == "r":
                         break
                     else:
@@ -255,6 +297,7 @@ def main():
 
                             while True:
                                 matching_lines = [line for line in data["lines"] if line["header"] == selected_header]
+                                # print(data['lines'])
                                 if not matching_lines:
                                     print("Bu header altında satır bulunmamaktadır.")
                                     break
@@ -269,8 +312,21 @@ def main():
                                         with open('codebook.json', 'r') as f:
                                             codebook = json.load(f)
                                         formatted_lines = "\n".join(format_lines_for_saving(data['lines']))
-                                        print("LİNES", formatted_lines)
-                                        textToBit.encode_text(formatted_lines, codebook)
+                                        
+                                        # print("FOR",formatted_lines)
+                                        # textToBit.encode_text(formatted_lines, codebook)
+                                        encoded_bytes= textToBit.export_encode_text(formatted_lines,codebook)
+                                        
+                                        if encoded_bytes:
+                                            filename = f'{filename}.bin'
+                                            compressed_filename = f'{filename}.gz'
+                                            print("3",compressed_filename)
+                                            
+                                            with open(filename, "wb") as bin_file:
+                                                bin_file.write(encoded_bytes)
+                                            gz_utils.compress_file(filename, compressed_filename)
+                                            os.remove(filename)
+                                            return
                                     return
                                 elif line_choice.lower() == "r":
                                     break
@@ -308,11 +364,24 @@ def main():
                         codebook = json.load(f)
                     formatted_lines = "\n".join(format_lines_for_saving(data['lines']))
                     
-                    print(formatted_lines)
-                    textToBit.encode_text(formatted_lines, codebook)
+                    # print(formatted_lines)
+                    # textToBit.encode_text(formatted_lines, codebook)
+                    encoded_bytes= textToBit.export_encode_text(formatted_lines,codebook)
+                    
+                    if encoded_bytes:
+                        filename = f'{filename}.bin'
+                        compressed_filename = f'{filename}.gz'
+                        print("4",compressed_filename)
+                        
+                        with open(filename, "wb") as bin_file:
+                            bin_file.write(encoded_bytes)
+                        gz_utils.compress_file(filename, compressed_filename)
+                        os.remove(filename)
+                        return
                 return
             else:
                 print("Geçersiz seçim. Lütfen tekrar deneyin.")
+                
 
 
 
