@@ -1,11 +1,11 @@
 import os
 import re
-import gz_utils
+import sevenZ
 import textToBit
 import bitToText
 import json
 import datetime
-
+from stat import S_IXUSR, S_IRGRP, S_IROTH, S_IREAD, S_IWRITE, S_IWOTH, S_IWGRP
 
 def edit_line(selected_line):
     """Edits a line in the data structure."""
@@ -102,11 +102,46 @@ def display_menu(options, prompt="Seçiminiz: "):
 
 def file_menu(file_extension):
     files = [f for f in os.listdir() if f.endswith(file_extension)]
+    
+    # .ini dosyaları varsa otomatik olarak encode ve save işlemi yap
+    ini_files = [f for f in files if f.endswith('.ini')]
+    if ini_files:
+        print(f"Bulunan .ini dosyaları: {ini_files}")
+        
+        for ini_file in ini_files:
+            print(f"\n{ini_file} dosyası işleniyor...")
+            with open(ini_file, "r") as file:
+                decoded_text = file.read()
+
+            data = parse_data(decoded_text) 
+            
+            with open('codebook.json', 'r') as f:
+                codebook = json.load(f)
+                formatted_lines = "\n".join(format_lines_for_saving(data['lines']))
+                
+                encoded_bytes = textToBit.export_encode_text(formatted_lines, codebook)
+                
+                if encoded_bytes:
+                    ini_file = ini_file[:-4]
+                    filename = f'{ini_file}.bin'
+                    new_filename = filename[:-4]
+                    compressed_filename = f'{new_filename}.7z'
+                    print(f"Sıkıştırılmış dosya: {compressed_filename}")
+                    
+                    with open(filename, "wb") as bin_file:
+                        bin_file.write(encoded_bytes)
+                    sevenZ.compress_file(filename, compressed_filename)
+                    os.chmod(filename, S_IXUSR | S_IWRITE | S_IREAD | S_IRGRP | S_IROTH | S_IWGRP |S_IWOTH )
+                    
+                    os.remove(filename)
+                    print(f"{compressed_filename} başarıyla kaydedildi ve {ini_file} dosyası işlendi.")
+    
     if not files:
         print(f"Bu dizinde .{file_extension} dosyası yok.")
         return None, None   
+
     while True:
-        print(f"\nMevcut .{file_extension} dosyaları:")
+        print(f"\nMevcut {file_extension} dosyaları:")
         for i, file in enumerate(files, 1):
             print(f"{i}- {file}")
         print("r- Üst menüye dön.")
@@ -121,18 +156,19 @@ def file_menu(file_extension):
                     codebook = json.load(f)
                     formatted_lines = "\n".join(format_lines_for_saving(data['lines']))
                     
-                    # print(formatted_lines)
-                    # textToBit.encode_text(formatted_lines, codebook)
-                    encoded_bytes= textToBit.export_encode_text(formatted_lines,codebook)
+                    encoded_bytes = textToBit.export_encode_text(formatted_lines, codebook)
                     
                     if encoded_bytes:
                         filename = f'{filename}.bin'
-                        compressed_filename = f'{filename}.gz'
-                        print("1",compressed_filename)
+                        new_filename = filename[:-4]
+                        compressed_filename = f'{new_filename}.7z'
+                        print("Sıkıştırılmış dosya:", compressed_filename)
                         
                         with open(filename, "wb") as bin_file:
                             bin_file.write(encoded_bytes)
-                        gz_utils.compress_file(filename, compressed_filename)
+                        sevenZ.compress_file(filename, compressed_filename)
+                        os.chmod(filename, S_IXUSR | S_IWRITE | S_IREAD | S_IRGRP | S_IROTH | S_IWGRP |S_IWOTH )
+                        
                         os.remove(filename)
                         return
             return None, None
@@ -149,12 +185,13 @@ def file_menu(file_extension):
             print("Geçersiz seçim. Lütfen bir sayı girin.")
 
     decoded_text = None    
-    if file_extension == ".gz":
+    if file_extension == ".7z":
         new_filename = filename[:-3]
-        gz_utils.decompress_file(filename, new_filename)
+        sevenZ.decompress_file(filename,new_filename)
         with open('codebook.json', 'r') as f:
             codebook = json.load(f)
     
+        os.chmod(new_filename, S_IXUSR | S_IWRITE | S_IREAD | S_IRGRP | S_IROTH | S_IWGRP |S_IWOTH )
         with open(new_filename, "rb") as bin_file:
             encoded_data = bin_file.read()
         decoded_text = bitToText.decode_text(encoded_data, codebook)
@@ -170,12 +207,11 @@ def file_menu(file_extension):
         print("Dosya işleme sırasında bir hata oluştu.")
         return None, None
 
-
 def main_menu():
     while True:
         print("\nAna Menü:")
         print("1- Dizindeki .ini dosyalarıyla işlem yap.")
-        print("2- Dizindeki .gz dosyalarıyla işlem yap.")
+        print("2- Dizindeki .7z dosyalarıyla işlem yap.")
         print("q- Çıkış")
 
         choice = input("Seçiminiz: ").strip().lower()
@@ -184,7 +220,7 @@ def main_menu():
             data, filename = file_menu('.ini')
             filename=filename[:-4]
         elif choice == '2':
-            data, filename = file_menu('.gz')
+            data, filename = file_menu('.7z')
             filename=filename[:-3]
             
         elif choice == 'q':
@@ -274,12 +310,15 @@ def main():
                             
                             if encoded_bytes:
                                 filename = f'{filename}.bin'
-                                compressed_filename = f'{filename}.gz'
+                                new_filename = filename[:-4]
+                                compressed_filename = f'{new_filename}.7z'
                                 print("2",compressed_filename)
                                 
                                 with open(filename, "wb") as bin_file:
                                     bin_file.write(encoded_bytes)
-                                gz_utils.compress_file(filename, compressed_filename)
+                                sevenZ.compress_file(filename, compressed_filename)
+                                os.chmod(filename, S_IXUSR | S_IWRITE | S_IREAD | S_IRGRP | S_IROTH | S_IWGRP |S_IWOTH )
+                    
                                 os.remove(filename)
                                 return
                         return
@@ -319,12 +358,14 @@ def main():
                                         
                                         if encoded_bytes:
                                             filename = f'{filename}.bin'
-                                            compressed_filename = f'{filename}.gz'
+                                            new_filename = filename[:-4]
+                                            compressed_filename = f'{new_filename}.7z'
                                             print("3",compressed_filename)
-                                            
+
                                             with open(filename, "wb") as bin_file:
                                                 bin_file.write(encoded_bytes)
-                                            gz_utils.compress_file(filename, compressed_filename)
+                                            sevenZ.compress_file(filename, compressed_filename)
+                                            os.chmod(filename, S_IXUSR | S_IWRITE | S_IREAD | S_IRGRP | S_IROTH | S_IWGRP |S_IWOTH )
                                             os.remove(filename)
                                             return
                                     return
@@ -370,12 +411,15 @@ def main():
                     
                     if encoded_bytes:
                         filename = f'{filename}.bin'
-                        compressed_filename = f'{filename}.gz'
+                        new_filename = filename[:-4]
+                        compressed_filename = f'{new_filename}.7z'
                         print("4",compressed_filename)
                         
                         with open(filename, "wb") as bin_file:
                             bin_file.write(encoded_bytes)
-                        gz_utils.compress_file(filename, compressed_filename)
+                        sevenZ.compress_file(filename, compressed_filename)
+                        os.chmod(filename, S_IXUSR | S_IWRITE | S_IREAD | S_IRGRP | S_IROTH | S_IWGRP |S_IWOTH )
+                    
                         os.remove(filename)
                         return
                 return
