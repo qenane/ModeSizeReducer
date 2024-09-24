@@ -4,12 +4,12 @@ import sevenZ
 import textToBit
 import bitToText
 import json
-import datetime
-from stat import S_IXUSR, S_IRGRP, S_IROTH, S_IREAD, S_IWRITE, S_IWOTH, S_IWGRP
+from stat import S_IXUSR, S_IRGRP, S_IROTH, S_IREAD, S_IWRITE, S_IWOTH, S_IWGRP#dosya izinlerini ayarlamak için(başka bir dil kullanırken yerine terminal komutları ile işlem yapılabilir)
 
 def edit_line(selected_line):
-    """Edits a line in the data structure."""
+    #satırları parse edip düzenlemek için oluşturulan fonksiyon
     if ':' in selected_line:
+        #X0=ppi:.... formatındaki satırları düzgün parse edebilmek için complex_match
         complex_match = re.match(r'^(\w+)=([\w\.\-:]+)$', selected_line)
         if not complex_match:
             print("Kompleks satır beklenen formatta değil.")
@@ -17,8 +17,7 @@ def edit_line(selected_line):
         
         key, value_string = complex_match.groups()
         subkey_value_pairs = re.findall(r'([a-zA-Z]+):(-?\d*\.?\d+)', value_string)
-        # print(f"Value String: {value_string}")
-        # print(f"Subkey-Value Pairs: {subkey_value_pairs}")
+
 
         if not subkey_value_pairs:
             print("Kompleks satırda anahtar-değer çiftleri bulunamadı.")
@@ -28,7 +27,7 @@ def edit_line(selected_line):
         print(f"Mevcut Line: {selected_line}")
         for i, (subkey, value) in enumerate(line_dict.items(), 1):
             print(f"{i}. {subkey}: {value}")
-
+        #kompleks satırlar seçildikten sonra sub-valueları değiştirmek için
         while True:
             try:
                 subkey_choice = input(f"Değiştirmek istediğiniz subkey'in numarasını seçin (1-{len(line_dict)}), 'q' ile çık: ")
@@ -65,7 +64,7 @@ def edit_line(selected_line):
         print(f"Güncellenmiş Line: {new_line}")
         return new_line
 
-def format_lines_for_saving(data):
+def format_lines_for_saving(data):#değişiklikleri kaydetme seçeneği seçildiği durumda kaydetmek için
     formatted_lines = []
     current_header = None
 
@@ -73,7 +72,6 @@ def format_lines_for_saving(data):
         if line["header"] != current_header:
             current_header = line["header"]
             formatted_lines.append(current_header)
-        # print(line)
         if ":" in line['line']:
             if "key" in line and line["key"]:
                 all_values = {**line["numeric_values"], **line["non_numeric_values"]}
@@ -92,7 +90,7 @@ def format_lines_for_saving(data):
         formatted_lines.append(formatted_line)
     
     return formatted_lines
-
+#görüntülecek menünün ayarlanması
 def display_menu(options, prompt="Seçiminiz: "):
     for i, option in enumerate(options, 1):
         print(f"{i}- {option}")
@@ -173,7 +171,7 @@ def file_menu(file_extension):
                         return
             return None, None
         elif file_choice.lower() == "r":
-            return "back", None
+            return "back",None
         try:
             file_index = int(file_choice) - 1
             if 0 <= file_index < len(files):
@@ -181,6 +179,7 @@ def file_menu(file_extension):
                 break
             else:
                 print(f"Geçersiz seçim. Lütfen 1 ile {len(files)} arasında bir sayı girin.")
+                filename = None  # Set filename to None if selection is invalid
         except ValueError:
             print("Geçersiz seçim. Lütfen bir sayı girin.")
 
@@ -231,7 +230,7 @@ def main_menu():
 
         if data == "back":
             continue
-
+        
         return data, filename
 
 def parse_line(line, current_header):
@@ -304,8 +303,7 @@ def main():
                                 codebook = json.load(f)
                             formatted_lines = "\n".join(format_lines_for_saving(data['lines']))
                             
-                            # print(formatted_lines)
-                            # textToBit.encode_text(formatted_lines, codebook)
+
                             encoded_bytes= textToBit.export_encode_text(formatted_lines,codebook)
                             
                             if encoded_bytes:

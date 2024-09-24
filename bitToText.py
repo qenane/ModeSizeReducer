@@ -1,21 +1,12 @@
 import json
 
 def decode_text(encoded_bytes, codebook):
-    """
-    İkili verileri, verilen kod kitabını kullanarak metne çevirir.
 
-    Args:
-        encoded_bytes: Encode edilmiş ikili veri.
-        codebook: Kod kitabı (karakter-ikili eşleştirmeleri).
 
-    Returns:
-        Çevrilen metin.
-    """
-
-    # İkili verileri bir bit dizisine çevir
+    # Binary verileri bir bit dizisine çevirir
     binary_string = ''.join(format(byte, '08b') for byte in encoded_bytes)
 
-    # Kod kitabını tersine çevir (ikili değer: karakter)
+    # Codebook'u tersine çevirir 
     reverse_codebook = {v: k for k, v in codebook.items()}
 
     decoded_text = ""
@@ -37,7 +28,7 @@ def main():
 
     decoded_text = decode_text(encoded_data, codebook)
 
-    # Çevrilen metni bir dosyaya yaz veya ekrana yazdır
+    # Çevrilen metni bir dosyaya yaz veya ekrana yazdırır
     with open("decoded.txt", "w") as f:
         f.write(decoded_text)
 

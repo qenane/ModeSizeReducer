@@ -8,13 +8,11 @@ def find_7zip():
     seven_zip_cmd = '7z'
     
     if platform.system() == 'Windows':
-        # Windows'ta '7z.exe' kurulu ve PATH'te mi?
         seven_zip_cmd = '7z.exe'
         try:
             subprocess.run([seven_zip_cmd], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return seven_zip_cmd
         except FileNotFoundError:
-            # PATH'te değilse tam yolu kontrol et
             possible_paths = [
                 r'C:\Program Files\7-Zip\7z.exe',
                 r'C:\Program Files (x86)\7-Zip\7z.exe'
@@ -23,7 +21,6 @@ def find_7zip():
                 if os.path.exists(path):
                     return path
             
-            # Kullanıcıdan yol iste
             user_path = input("7-Zip bulunamadı. Lütfen 7z.exe dosyasının tam yolunu girin: ")
             if os.path.exists(user_path):
                 return user_path
@@ -31,7 +28,6 @@ def find_7zip():
                 raise FileNotFoundError("7-Zip bulunamadı ve verilen yol geçersiz.")
     
     elif platform.system() == 'Linux':
-        # Linux'ta '7z' kurulu ve PATH'te mi?
         try:
             subprocess.run([seven_zip_cmd], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return seven_zip_cmd
@@ -52,23 +48,18 @@ def compress_file(input_file, output_file):
         
 
 def decompress_file(input_file, output_name):
-    # Dosya izinlerini ayarla
     
-    # Geçici bir dizin oluştur
     temp_dir = "temp_extract"
     os.makedirs(temp_dir, exist_ok=True)
     
     seven_zip_cmd = find_7zip()
     try:
-        # 7-Zip ile geçici dizine çıkar
         subprocess.run([seven_zip_cmd, 'e', input_file, f"-o{temp_dir}"], check=True)
 
-        # Geçici dizindeki dosyayı yeni ismiyle yeniden adlandır
-        extracted_file = os.listdir(temp_dir)[0]  # Çıkarılan ilk dosyayı al
+        extracted_file = os.listdir(temp_dir)[0]
         extracted_path = os.path.join(temp_dir, extracted_file)
         os.rename(extracted_path, output_name)
 
-        # Geçici dizini temizle
         os.rmdir(temp_dir)
 
     except subprocess.CalledProcessError:
@@ -91,10 +82,8 @@ def main():
     if not output_tar_7z.endswith('.7z'):
         output_tar_7z += '.7z'
 
-    # Dosyayı sıkıştırma
     compress_file(input_path, output_tar_7z)
 
-    # Dosyayı açma
     output_folder = input("Dosyaları çıkarmak istediğiniz klasör adı: ").strip()
     
     decompress_file(output_tar_7z, output_folder)
